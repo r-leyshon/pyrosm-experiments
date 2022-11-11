@@ -1,6 +1,7 @@
 import pyrosm
 import os
 from pyprojroot import here
+import shapely
 
 """
 1. get Data
@@ -30,8 +31,12 @@ def ingest_osm(osm_pth, bbox=None):
     elif not os.path.exists(pth):
         raise FileNotFoundError("`osm_pth` not found.")
     elif bbox:
-        osm_dat = pyrosm.OSM(osm_pth, bounding_box=bbox)
-        return osm_dat
+        if isinstance(bbox, shapely.geometry.multipolygon.MultiPolygon):
+            osm_dat = pyrosm.OSM(osm_pth, bounding_box=bbox)
+            return osm_dat
+        else:
+            raise TypeError("`bbox` must be a shapely geometry.")
+
     else:
         osm_dat = pyrosm.OSM(osm_pth)
         bounds = osm_dat.get_boundaries().name.values
@@ -59,7 +64,6 @@ def filter_osm(osm_obj, osm_pth, aoi_pat):
         raise TypeError("`aoi_pat` must be of type str.")
 
     bbox_geom = osm_obj.get_boundaries(name=aoi_pat).geometry.values[0]
-    print(type(bbox_geom))
     aoi_osm = ingest_osm(osm_pth, bbox=bbox_geom)
     return aoi_osm
 
