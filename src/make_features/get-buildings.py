@@ -4,12 +4,6 @@ from pyprojroot import here
 from shapely.geometry.multipolygon import MultiPolygon
 
 """
-1. get Data
-
-
-2. filter to aoi
-
-3. get buildings
 
 4. summarise classification
 """
@@ -22,7 +16,11 @@ def ingest_osm(osm_pth, bbox=None):
     Args:
         osm_pth (str): Path to the osm.pbf file.
 
-        bbox
+        bbox (shapely.geometry.Geometry, optional): A geometry to filter
+        the pyrosm.OSM object.
+
+    Returns:
+        pyrosm.OSM object, array of available boundaries within the osm.pbf
     """
     pth = os.path.normpath(osm_pth)
 
@@ -52,12 +50,22 @@ aoi = y[3]
 
 
 def filter_buildings(osm_obj, osm_pth, aoi_pat):
-    """_summary_
+    """
+    Filter osm.pbf to a specific area and return the buildings.
+
+    Finds the matching bounding box geometry to `aoi_pat` if available
+    within the `osm_obj`. If found, refilters the osm.pbf file on disk to
+    the area of interest extent. Extract the buildings.
 
     Args:
-        osm_obj (_type_): _description_
-        osm_pth
-        aoi_pat (_type_): _description_
+        osm_obj (pyrosm.pyrosm.OSM): Pyrosm object extracted from the
+        osm.pbf file. The output of `ingest_osm()` when you do not provide
+        a value to the bbox argument.
+        osm_pth (str): Path to the osm.pbf file.
+        aoi_pat (str): The pattern to search for bounding box geometry.
+
+    Returns:
+        Geopandas DF with buildings for the area of interest.
     """
     if not isinstance(osm_obj, pyrosm.pyrosm.OSM):
         raise TypeError("`osm_obj` must be of type pyrosm.OSM.")
