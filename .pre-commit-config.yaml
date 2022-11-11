@@ -58,5 +58,8 @@ repos:
     hooks:
       - id: detect-secrets
         name: detect-secrets - Detect secrets in staged code
-        args: [ "--baseline", ".secrets.baseline" ]
+        args: [ "--baseline", ".secrets.baseline", '--exclude-files', '.*\.ipynb$',  ]
         exclude: .*/tests/.*|^\.cruft\.json$
+      - id: detect-secrets
+        name: 'detect-secrets-jupyter'
+        args: ['--exclude-files', '.*[^i][^p][^y][^n][^b]$', '--exclude-lines', '"(hash|id|image/\w+)":.*', ]
