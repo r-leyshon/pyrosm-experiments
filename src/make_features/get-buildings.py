@@ -50,7 +50,7 @@ x, y = ingest_osm(
 aoi = y[3]
 
 
-def filter_osm(osm_obj, osm_pth, aoi_pat):
+def filter_buildings(osm_obj, osm_pth, aoi_pat):
     """_summary_
 
     Args:
@@ -65,10 +65,12 @@ def filter_osm(osm_obj, osm_pth, aoi_pat):
 
     bbox_geom = osm_obj.get_boundaries(name=aoi_pat).geometry.values[0]
     aoi_osm = ingest_osm(osm_pth, bbox=bbox_geom)
-    return aoi_osm
+    aoi_buildings = aoi_osm.get_buildings()
+
+    return aoi_buildings
 
 
-aoi_x = filter_osm(
+aoi_x = filter_buildings(
     x,
     osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
     aoi_pat=aoi,
