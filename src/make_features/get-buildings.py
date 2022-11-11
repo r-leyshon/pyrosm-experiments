@@ -14,12 +14,14 @@ from pyprojroot import here
 """
 
 
-def ingest_osm(osm_pth):
+def ingest_osm(osm_pth, bbox=None):
     """
     Read in OSM data. Find the available boundary names.
 
     Args:
         osm_pth (str): Path to the osm.pbf file.
+
+        bbox
     """
     pth = os.path.normpath(osm_pth)
 
@@ -27,6 +29,9 @@ def ingest_osm(osm_pth):
         raise ValueError("Incorrect suffix. Check the `osm_pth` filename.")
     elif not os.path.exists(pth):
         raise FileNotFoundError("`osm_pth` not found.")
+    elif bbox:
+        osm_dat = pyrosm.OSM(osm_pth, bounding_box=bbox)
+        return osm_dat
     else:
         osm_dat = pyrosm.OSM(osm_pth)
         bounds = osm_dat.get_boundaries().name.values
@@ -36,4 +41,31 @@ def ingest_osm(osm_pth):
 
 x, y = ingest_osm(
     os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf")
+)
+aoi = y[3]
+
+
+def filter_osm(osm_obj, osm_pth, aoi_pat):
+    """_summary_
+
+    Args:
+        osm_obj (_type_): _description_
+        osm_pth
+        aoi_pat (_type_): _description_
+    """
+    if not isinstance(osm_obj, pyrosm.pyrosm.OSM):
+        raise TypeError("`osm_obj` must be of type pyrosm.OSM.")
+    elif not isinstance(aoi_pat, str):
+        raise TypeError("`aoi_pat` must be of type str.")
+
+    bbox_geom = osm_obj.get_boundaries(name=aoi_pat).geometry.values[0]
+    print(type(bbox_geom))
+    aoi_osm = ingest_osm(osm_pth, bbox=bbox_geom)
+    return aoi_osm
+
+
+aoi_x = filter_osm(
+    x,
+    osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
+    aoi_pat=aoi,
 )
