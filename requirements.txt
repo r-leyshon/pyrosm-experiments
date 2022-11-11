@@ -6,3 +6,6 @@ pytest
 python-dotenv
 Sphinx
 toml
+matplotlib==3.6.2
+pyprojroot==0.2.0
+pyrosm==0.6.1
