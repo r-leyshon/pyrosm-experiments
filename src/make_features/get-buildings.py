@@ -1,7 +1,7 @@
 import pyrosm
 import os
 from pyprojroot import here
-import shapely
+from shapely.geometry.multipolygon import MultiPolygon
 
 """
 1. get Data
@@ -31,7 +31,8 @@ def ingest_osm(osm_pth, bbox=None):
     elif not os.path.exists(pth):
         raise FileNotFoundError("`osm_pth` not found.")
     elif bbox:
-        if isinstance(bbox, shapely.geometry.multipolygon.MultiPolygon):
+        if isinstance(bbox, MultiPolygon):
+
             osm_dat = pyrosm.OSM(osm_pth, bounding_box=bbox)
             return osm_dat
         else:
