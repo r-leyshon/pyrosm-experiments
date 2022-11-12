@@ -7,6 +7,7 @@ import geopandas as gpd
 import re
 import numpy as np
 import pygeos
+import pandas as pd
 
 
 def ingest_osm(osm_pth, bbox=None):
@@ -112,18 +113,24 @@ y = clean_aoi(y)
 
 
 probs = list()
-area_buildings = gpd.GeoDataFrame()
+df_list = list()
 
-for area in y:
+for area in y[:10]:
     try:
-        aoi_builds = filter_buildings(
+        aoi_feats = filter_buildings(
             osm_obj=x,
             osm_pth=os.path.join(
                 here(), "data", "external", "cropped_north_line.osm.pbf"
             ),
             aoi_pat=area,
         )
-        area_buildings = area_buildings.concat(aoi_builds)
+        df_list.append(aoi_feats)
     except pygeos.GEOSException:
         print(f"{area} triggered exception")
-        probs = probs.append(area)
+        probs.append(area)
+
+rdf = gpd.GeoDataFrame(pd.concat(df_list, ignore_index=True))
+
+# TODO
+# check with pyrosm data download - do the pygeos exceptions happen as much
+# 4 / 10 of the boundaries here caused the issue
