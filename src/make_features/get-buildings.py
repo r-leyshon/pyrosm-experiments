@@ -18,7 +18,8 @@ def ingest_osm(osm_pth, bbox=None):
         osm_pth (str): Path to the osm.pbf file.
 
         bbox (shapely.geometry.Geometry, optional): A geometry to filter
-        the pyrosm.OSM object. Can be Polygon or Multipolygon.
+        the pyrosm.OSM object. Can be Polygon or Multipolygon. Defaults to
+        None.
 
     Returns:
         pyrosm.OSM object, array of available boundaries within the osm.pbf
@@ -64,7 +65,7 @@ def filter_buildings(osm_obj, osm_pth, aoi_pat):
         aoi_pat (str): The pattern to search for bounding box geometry.
 
     Returns:
-        Geopandas DF with buildings for the area of interest.
+        Geopandas GDF with buildings for the area of interest.
     """
     if not isinstance(osm_obj, pyrosm.pyrosm.OSM):
         raise TypeError("`osm_obj` must be of type pyrosm.OSM.")
@@ -82,12 +83,20 @@ def filter_buildings(osm_obj, osm_pth, aoi_pat):
 
 
 def clean_aoi(aoinms, rem_pats="(?i)alba|england|united kingdom|north east"):
-    """_summary_
+    """
+    Remove unwanted area boundaries.py
+
+    Using regex case insensitive search, remove pattern matches from the
+    area name array.
 
     Args:
-        aoinms (_type_): _description_
-        rem_pats (_type_): _description_
-        'Alba / Scotland', 'England', 'United Kingdom'
+        aoinms (numpy.ndarray): Array containing area names from pyrosm.OSM
+        object.
+        rem_pats (str): String containing regex pattern to search with.
+        Defaults to "(?i)alba|england|united kingdom|north east".
+
+    Returns:
+        numpy.ndarray: `aoinms` with pattern matches to `rem_pats` removed.
     """
     pat = re.compile(rem_pats)
     # working with numpy ndarray, so need to vectorise the match
@@ -98,18 +107,29 @@ def clean_aoi(aoinms, rem_pats="(?i)alba|england|united kingdom|north east"):
 
 
 def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
-    """_summary_
+    """
+    Get the building features from an OSM file for all `areanms`.
 
     Args:
-        osm_obj
-        osm_pth (_type_): _description_
-        areanms (_type_): _description_
-        clean_nms=True
+        osm_obj (pyrosm.OSM): A pyrosm.OSM object.
+        osm_pth (str): Path to the osm.pbf file on disk.
+        areanms (numpy.ndarray): Array containing area names from
+        pyrosm.OSM object.
+        clean_nms (bool): Should `clean_names()` be used to remove unwanted
+        area boundaries? Defaults to True.
+
+    Returns:
+        gpd.GeoDataFrame: GeoDataFrame containing the concatenated building
+        DataFrames for all areas that do not throw an exception.
+        list: Names of areas that threw a pygeos.GEOSException.
+        list: Names of areas that threw an AttributeError (likely to be
+        areas that contain no features).
     """
     if clean_nms:
         areanms = clean_aoi(areanms)
 
-    probs = list()
+    pygeos_probs = list()
+    empty_probs = list()
     df_list = list()
 
     for area in areanms:
@@ -122,17 +142,17 @@ def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
             df_list.append(aoi_feats)
         except pygeos.GEOSException:
             print(f"{area} triggered pygoes exception")
-            probs.append(area)
+            pygeos_probs.append(area)
         except AttributeError:
             print(f"{area} triggered AttributeError")
-            probs.append(area)
+            empty_probs.append(area)
     # Append the listed dfs together
     rdf = gpd.GeoDataFrame(pd.concat(df_list, ignore_index=True))
 
-    return (rdf, probs)
+    return (rdf, pygeos_probs, empty_probs)
 
 
-rdf, probs = get_features_recurse(
+rdf, pygeos_probs, empty_probs = get_features_recurse(
     osm_obj=x,
     osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
     areanms=y,
@@ -143,14 +163,19 @@ rdf.to_pickle(os.path.join(here(), "data", "processed", pklName))
 
 
 def summarise_features(features_gdf, featurenm="building"):
-    """_summary_
+    """
+    Summarise the output of `get_features_recurse()`, calculating % of
+    building category to 2 d.p.
 
     Args:
-        features_gdf (_type_): _description_
-        featurenm (str, optional): _description_. Defaults to "building".
+        features_gdf (gpd.GeoDataFrame): GeoDataFrame containing building
+        features, as is the output of `get_features_recurse()`.
+        featurenm (str, optional): The name of the column containing the
+        features to summarise. Defaults to "building".
 
     Returns:
-        _type_: _description_
+        pandas.core.frame.DataFrame: Summary DF containing proportion of
+        building categories by areas available within the data,
     """
     feat_counts = features_gdf.groupby("aoinm", as_index=False)[
         featurenm
