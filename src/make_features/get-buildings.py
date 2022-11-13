@@ -150,11 +150,30 @@ rdf, probs = get_features_recurse(
 pklName = "planetOSM-NE-England-buildings.pkl"
 rdf.to_pickle(os.path.join(here(), "data", "processed", pklName))
 
-feat_counts = rdf.groupby("aoinm", as_index=False)["building"].value_counts()
-feat_counts["aoi_tot"] = (
-    feat_counts["count"].groupby(feat_counts.aoinm).transform("sum")
-)
 
-feat_counts = feat_counts.assign(
-    building_class_pc=round((feat_counts["count"] / feat_counts["aoi_tot"]) * 100, 2),
-)
+def summarise_features(features_gdf, featurenm="building"):
+    """_summary_
+
+    Args:
+        features_gdf (_type_): _description_
+        featurenm (str, optional): _description_. Defaults to "building".
+
+    Returns:
+        _type_: _description_
+    """
+    feat_counts = features_gdf.groupby("aoinm", as_index=False)[
+        featurenm
+    ].value_counts()
+    feat_counts["aoi_tot"] = (
+        feat_counts["count"].groupby(feat_counts.aoinm).transform("sum")
+    )
+    feat_counts = feat_counts.assign(
+        building_class_pc=round(
+            (feat_counts["count"] / feat_counts["aoi_tot"]) * 100, 2
+        ),
+    )
+
+    return feat_counts
+
+
+summarise_features(rdf)
