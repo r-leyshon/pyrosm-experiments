@@ -176,4 +176,10 @@ def summarise_features(features_gdf, featurenm="building"):
     return feat_counts
 
 
-summarise_features(rdf)
+feature_summary = summarise_features(rdf)
+
+feature_summary.to_csv(
+    os.path.join(
+        here(), "data", "processed", "planetOSM-NE-England-building-summary.csv"
+    )
+)
