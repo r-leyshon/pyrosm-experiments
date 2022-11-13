@@ -46,7 +46,6 @@ def ingest_osm(osm_pth, bbox=None):
 x, y = ingest_osm(
     os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf")
 )
-aoi = y[3]
 
 
 def filter_buildings(osm_obj, osm_pth, aoi_pat):
@@ -80,17 +79,6 @@ def filter_buildings(osm_obj, osm_pth, aoi_pat):
     aoi_buildings = aoi_buildings.assign(aoinm=aoi_pat)
 
     return aoi_buildings
-
-
-# aoi = y[46] # works for a polygon bbox
-aoi = y[3]  # works for a multipoly bbox
-# aoi = y[4]
-
-aoi_x = filter_buildings(
-    x,
-    osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
-    aoi_pat=aoi,
-)
 
 
 def clean_aoi(aoinms, rem_pats="(?i)alba|england|united kingdom|north east"):
@@ -133,7 +121,10 @@ def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
             )
             df_list.append(aoi_feats)
         except pygeos.GEOSException:
-            print(f"{area} triggered exception")
+            print(f"{area} triggered pygoes exception")
+            probs.append(area)
+        except AttributeError:
+            print(f"{area} triggered AttributeError")
             probs.append(area)
     # Append the listed dfs together
     rdf = gpd.GeoDataFrame(pd.concat(df_list, ignore_index=True))
@@ -144,7 +135,7 @@ def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
 rdf, probs = get_features_recurse(
     osm_obj=x,
     osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
-    areanms=y[:10],
+    areanms=y,
 )
 
 pklName = "planetOSM-NE-England-buildings.pkl"
