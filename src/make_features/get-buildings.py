@@ -144,8 +144,17 @@ def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
 rdf, probs = get_features_recurse(
     osm_obj=x,
     osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
-    areanms=y[:5],
+    areanms=y[:10],
 )
 
 pklName = "planetOSM-NE-England-buildings.pkl"
 rdf.to_pickle(os.path.join(here(), "data", "processed", pklName))
+
+feat_counts = rdf.groupby("aoinm", as_index=False)["building"].value_counts()
+feat_counts["aoi_tot"] = (
+    feat_counts["count"].groupby(feat_counts.aoinm).transform("sum")
+)
+
+feat_counts = feat_counts.assign(
+    building_class_pc=round((feat_counts["count"] / feat_counts["aoi_tot"]) * 100, 2),
+)
