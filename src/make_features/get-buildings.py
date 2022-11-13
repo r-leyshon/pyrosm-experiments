@@ -109,28 +109,43 @@ def clean_aoi(aoinms, rem_pats="(?i)alba|england|united kingdom|north east"):
     return aoinms[~sel]
 
 
-y = clean_aoi(y)
+def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
+    """_summary_
+
+    Args:
+        osm_obj
+        osm_pth (_type_): _description_
+        areanms (_type_): _description_
+        clean_nms=True
+    """
+    if clean_nms:
+        areanms = clean_aoi(areanms)
+
+    probs = list()
+    df_list = list()
+
+    for area in areanms:
+        try:
+            aoi_feats = filter_buildings(
+                osm_obj=osm_obj,
+                osm_pth=osm_pth,
+                aoi_pat=area,
+            )
+            df_list.append(aoi_feats)
+        except pygeos.GEOSException:
+            print(f"{area} triggered exception")
+            probs.append(area)
+    # Append the listed dfs together
+    rdf = gpd.GeoDataFrame(pd.concat(df_list, ignore_index=True))
+
+    return (rdf, probs)
 
 
-probs = list()
-df_list = list()
+rdf, probs = get_features_recurse(
+    osm_obj=x,
+    osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
+    areanms=y[:5],
+)
 
-for area in y[:10]:
-    try:
-        aoi_feats = filter_buildings(
-            osm_obj=x,
-            osm_pth=os.path.join(
-                here(), "data", "external", "cropped_north_line.osm.pbf"
-            ),
-            aoi_pat=area,
-        )
-        df_list.append(aoi_feats)
-    except pygeos.GEOSException:
-        print(f"{area} triggered exception")
-        probs.append(area)
-
-rdf = gpd.GeoDataFrame(pd.concat(df_list, ignore_index=True))
-
-# TODO
-# check with pyrosm data download - do the pygeos exceptions happen as much
-# 4 / 10 of the boundaries here caused the issue
+pklName = "planetOSM-NE-England-buildings.pkl"
+rdf.to_pickle(os.path.join(here(), "data", "processed", pklName))
