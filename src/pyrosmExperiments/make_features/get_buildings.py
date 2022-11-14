@@ -1,6 +1,5 @@
 import pyrosm
 import os
-from pyprojroot import here
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
@@ -42,11 +41,6 @@ def ingest_osm(osm_pth, bbox=None):
         bounds = osm_dat.get_boundaries().name.values
         print(f"OSM data ingested. {len(bounds)} boundaries available.")
         return (osm_dat, bounds)
-
-
-x, y = ingest_osm(
-    os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf")
-)
 
 
 def filter_buildings(osm_obj, osm_pth, aoi_pat):
@@ -152,16 +146,6 @@ def get_features_recurse(osm_obj, osm_pth, areanms, clean_nms=True):
     return (rdf, pygeos_probs, empty_probs)
 
 
-rdf, pygeos_probs, empty_probs = get_features_recurse(
-    osm_obj=x,
-    osm_pth=os.path.join(here(), "data", "external", "cropped_north_line.osm.pbf"),
-    areanms=y,
-)
-
-pklName = "planetOSM-NE-England-buildings.pkl"
-rdf.to_pickle(os.path.join(here(), "data", "processed", pklName))
-
-
 def summarise_features(features_gdf, featurenm="building"):
     """
     Summarise the output of `get_features_recurse()`, calculating % of
@@ -190,12 +174,3 @@ def summarise_features(features_gdf, featurenm="building"):
     )
 
     return feat_counts
-
-
-feature_summary = summarise_features(rdf)
-
-feature_summary.to_csv(
-    os.path.join(
-        here(), "data", "processed", "planetOSM-NE-England-building-summary.csv"
-    )
-)
