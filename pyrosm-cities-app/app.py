@@ -1,4 +1,4 @@
-from shiny import ui, render, App
+from shiny import ui, render, App, reactive
 import pyrosm
 from pyrosm.data import sources
 
@@ -26,7 +26,10 @@ app_ui = ui.page_fixed(
                 label="Select a city:",
                 choices=cities,
                 selected="Birmingham",
-            )
+            ),
+            ui.input_action_button(
+                id="runButton", label="Go", class_="btn-primary w-100"
+            ),
         ),
         ui.panel_main(ui.output_text("measure_net")),
     ),
@@ -36,6 +39,7 @@ app_ui = ui.page_fixed(
 def server(input, output, session):
     @output
     @render.text
+    @reactive.event(input.runButton)
     def measure_net():
         fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
         osm = pyrosm.OSM(fp)
