@@ -3,11 +3,12 @@ import toml
 import os
 
 from shiny import ui, render, App, reactive
-from pyprojroot import here
 import geopandas as gpd
 
+# set working directory to that expected by deployment
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 # get the available city values
-CONFIG = toml.load(here("pyrosm-cities-app/config/01-update-db.toml"))
+CONFIG = toml.load("config/01-update-db.toml")
 
 cities = CONFIG["cities"]["aoi"]
 
@@ -55,7 +56,7 @@ def server(input, output, session):
     @reactive.event(input.runButton)
     def viz_feature():
         search_pat = re.compile(f"{input.citySelector()}-{input.featureSelector()}.*")
-        dat_pth = here("pyrosm-cities-app/data/")
+        dat_pth = "data/"
         all_files = os.listdir(dat_pth)
         found = [
             os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
