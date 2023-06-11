@@ -1,7 +1,10 @@
-from shiny import ui, render, App, reactive
-import pyrosm
+import re
 import toml
+import os
+
+from shiny import ui, render, App, reactive
 from pyprojroot import here
+import geopandas as gpd
 
 # get the available city values
 CONFIG = toml.load(here("pyrosm-cities-app/config/01-update-db.toml"))
@@ -28,27 +31,36 @@ app_ui = ui.page_fixed(
                 id="citySelector",
                 label="Select a city:",
                 choices=cities,
-                selected=cities[0:1],
+                selected=cities[-1],
             ),
             ui.input_action_button(
                 id="runButton", label="Go", class_="btn-primary w-100"
             ),
         ),
-        ui.panel_main(ui.output_text("measure_net")),
+        ui.panel_main(ui.output_plot("viz_net")),
     ),
 )
 
 
 def server(input, output, session):
     @output
-    @render.text
+    @render.plot
     @reactive.event(input.runButton)
-    def measure_net():
-        fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
-        osm = pyrosm.OSM(fp)
-        net = osm.get_network(network_type="driving")
-        net_len = int(round(sum(net["length"]) / 1000, 0))
-        return f"Estimated road length is {net_len:,} kilometers (nearest km)."
+    def viz_net():
+        search_pat = re.compile(f"{input.citySelector()}-net-driving.*")
+        dat_pth = here("pyrosm-cities-app/data/")
+        all_files = os.listdir(dat_pth)
+        found = [
+            os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
+        ]
+        dat = gpd.read_feather(found[0])
+        dat.plot()
+
+        # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
+        # osm = pyrosm.OSM(fp)
+        # net = osm.get_network(network_type="driving")
+        # net_len = int(round(sum(net["length"]) / 1000, 0))
+        # return f"Estimated road length is {net_len:,} kilometers (nearest km)."
 
 
 app = App(app_ui, server)
