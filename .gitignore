@@ -2,7 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,venv,pydev,linux,macos,flask,dotenv,django,direnv,python,windows,virtualenv,pycharm+all,visualstudio,jupyternotebooks,visualstudiocode
 
 # rsconnect lint
-./pyrosm-cities-app/rsonnect-python/
+pyrosm-cities-app/rsconnect-python/*
 
 *.png
 !example*.png
