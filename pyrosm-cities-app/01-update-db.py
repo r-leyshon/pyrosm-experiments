@@ -58,3 +58,14 @@ for city, osm in osm_cities.items():
     print(f"Writing landuse features to {fname}")
     landuse.to_feather(fname)
     n += 1
+
+# finally with green space
+n = 1
+for city, osm in osm_cities.items():
+    print(f"Extracting natural features {n} of {n_cities}")
+    nat = osm.get_natural()
+    slug = slugify(f"{city}-natural")
+    fname = os.path.join(out_pth, f"{slug}.arrow")
+    print(f"Writing natural features to {fname}")
+    nat.to_feather(fname)
+    n += 1
