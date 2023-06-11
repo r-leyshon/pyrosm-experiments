@@ -3,6 +3,7 @@
 
 # rsconnect lint
 pyrosm-cities-app/rsconnect-python/*
+pyrosm-cities-app/data/
 
 *.png
 !example*.png
