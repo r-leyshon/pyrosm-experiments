@@ -1,9 +1,12 @@
 from shiny import ui, render, App, reactive
 import pyrosm
-from pyrosm.data import sources
+import toml
+from pyprojroot import here
 
-# get the available city values with pyrosm
-cities = sources.cities.available
+# get the available city values
+CONFIG = toml.load(here("pyrosm-cities-app/config/01-update-db.toml"))
+
+cities = CONFIG["cities"]["aoi"]
 
 
 app_ui = ui.page_fixed(
@@ -25,7 +28,7 @@ app_ui = ui.page_fixed(
                 id="citySelector",
                 label="Select a city:",
                 choices=cities,
-                selected="Birmingham",
+                selected=cities[0:1],
             ),
             ui.input_action_button(
                 id="runButton", label="Go", class_="btn-primary w-100"
