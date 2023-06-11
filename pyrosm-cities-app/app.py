@@ -33,11 +33,17 @@ app_ui = ui.page_fixed(
                 choices=cities,
                 selected=cities[-1],
             ),
+            ui.input_select(
+                id="featureSelector",
+                label="Select a feature:",
+                choices=["net-driving", "landuse", "natural"],
+                selected="landuse",
+            ),
             ui.input_action_button(
                 id="runButton", label="Go", class_="btn-primary w-100"
             ),
         ),
-        ui.panel_main(ui.output_plot("viz_net")),
+        ui.panel_main(ui.output_plot("viz_feature")),
     ),
 )
 
@@ -46,8 +52,8 @@ def server(input, output, session):
     @output
     @render.plot
     @reactive.event(input.runButton)
-    def viz_net():
-        search_pat = re.compile(f"{input.citySelector()}-net-driving.*")
+    def viz_feature():
+        search_pat = re.compile(f"{input.citySelector()}-{input.featureSelector()}.*")
         dat_pth = here("pyrosm-cities-app/data/")
         all_files = os.listdir(dat_pth)
         found = [
