@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import toml
+from datetime import datetime
 
 import pyrosm
 from pyrosm.data import sources
@@ -33,6 +34,8 @@ for city in AOI:
 # extract the available networks & write to disk
 out_pth = here("pyrosm-cities-app/data/")
 Path.mkdir(out_pth)  # handles missing parent dirs
+# date for vintages
+vint = datetime.strftime(datetime.now(), "%Y-%m-%d")
 n_cities = len(osm_cities)
 n_nets = n_cities * len(MODES)
 n = 1
@@ -42,7 +45,7 @@ for city, osm in osm_cities.items():
         net = osm.get_network(network_type=mod)
         n += 1
         # slugify standardises filenames
-        slug = slugify(f"{city}-net-{mod}")
+        slug = slugify(f"{city}-net-{mod}-{vint}")
         fname = os.path.join(out_pth, f"{slug}.arrow")
         print(f"Writing net to {fname}")
         net.to_feather(fname)
@@ -53,7 +56,7 @@ n = 1
 for city, osm in osm_cities.items():
     print(f"Extracting landuse features {n} of {n_cities}")
     landuse = osm.get_landuse()
-    slug = slugify(f"{city}-landuse")
+    slug = slugify(f"{city}-landuse-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
     print(f"Writing landuse features to {fname}")
     landuse.to_feather(fname)
@@ -64,7 +67,7 @@ n = 1
 for city, osm in osm_cities.items():
     print(f"Extracting natural features {n} of {n_cities}")
     nat = osm.get_natural()
-    slug = slugify(f"{city}-natural")
+    slug = slugify(f"{city}-natural-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
     print(f"Writing natural features to {fname}")
     nat.to_feather(fname)
