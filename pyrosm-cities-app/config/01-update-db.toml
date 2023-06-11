@@ -1,0 +1,7 @@
+title = "Ingest config for pyrosm"
+
+[cities]
+aoi = ["london", "leeds", "marseille"]
+
+[network]
+modes = ["walking", "cycling", "driving", "driving+service"]
