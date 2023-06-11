@@ -13,6 +13,7 @@ cities = CONFIG["cities"]["aoi"]
 
 
 app_ui = ui.page_fixed(
+    ui.tags.header(ui.tags.html(lang="en"), ui.tags.title("Some Title")),
     ui.h1("City Road Network"),
     ui.markdown(
         """
