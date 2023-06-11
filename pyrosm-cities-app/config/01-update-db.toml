@@ -4,4 +4,5 @@ title = "Ingest config for pyrosm"
 aoi = ["london", "leeds", "marseille"]
 
 [network]
-modes = ["walking", "cycling", "driving", "driving+service"]
+#modes = ["walking", "cycling", "driving", "driving+service"]
+modes = ["driving"]
