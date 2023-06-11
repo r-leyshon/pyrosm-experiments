@@ -30,10 +30,11 @@ for city in AOI:
     fp = pyrosm.get_data(city)
     osm_cities[city] = pyrosm.OSM(fp)
 
-# ingest the available networks & write to disk
+# extract the available networks & write to disk
 out_pth = here("pyrosm-cities-app/data/")
 Path.mkdir(out_pth)  # handles missing parent dirs
-n_nets = len(osm_cities) * len(MODES)
+n_cities = len(osm_cities)
+n_nets = n_cities * len(MODES)
 n = 1
 for city, osm in osm_cities.items():
     for mod in MODES:
@@ -45,3 +46,15 @@ for city, osm in osm_cities.items():
         fname = os.path.join(out_pth, f"{slug}.arrow")
         print(f"Writing net to {fname}")
         net.to_feather(fname)
+
+
+# extract land use features & write to disk
+n = 1
+for city, osm in osm_cities.items():
+    print(f"Extracting landuse features {n} of {n_cities}")
+    landuse = osm.get_landuse()
+    slug = slugify(f"{city}-landuse")
+    fname = os.path.join(out_pth, f"{slug}.arrow")
+    print(f"Writing landuse features to {fname}")
+    landuse.to_feather(fname)
+    n += 1
