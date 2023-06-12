@@ -33,7 +33,10 @@ for city in AOI:
 
 # extract the available networks & write to disk
 out_pth = here("pyrosm-cities-app/data/")
-Path.mkdir(out_pth)  # handles missing parent dirs
+try:
+    Path.mkdir(out_pth)  # handles missing parent dirs
+except FileExistsError:
+    pass
 # date for vintages
 vint = datetime.strftime(datetime.now(), "%Y-%m-%d")
 n_cities = len(osm_cities)
@@ -47,6 +50,8 @@ for city, osm in osm_cities.items():
         # slugify standardises filenames
         slug = slugify(f"{city}-net-{mod}-{vint}")
         fname = os.path.join(out_pth, f"{slug}.arrow")
+        # retain only columns of interest
+        net = net.loc[:, ["geometry", "length", "maxspeed"]]
         print(f"Writing net to {fname}")
         net.to_feather(fname)
 
@@ -58,6 +63,8 @@ for city, osm in osm_cities.items():
     landuse = osm.get_landuse()
     slug = slugify(f"{city}-landuse-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
+    # keep only features of interest
+    landuse = landuse.loc[:, ["landuse", "geometry"]]
     print(f"Writing landuse features to {fname}")
     landuse.to_feather(fname)
     n += 1
@@ -69,6 +76,8 @@ for city, osm in osm_cities.items():
     nat = osm.get_natural()
     slug = slugify(f"{city}-natural-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
+    # keep only features of interest
+    nat = nat.loc[:, ["natural", "geometry"]]
     print(f"Writing natural features to {fname}")
     nat.to_feather(fname)
     n += 1
