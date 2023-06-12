@@ -4,6 +4,7 @@ import os
 
 from shiny import ui, render, App, reactive
 import geopandas as gpd
+import matplotlib.pyplot as plt
 
 # set working directory to that expected by deployment
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -45,16 +46,24 @@ app_ui = ui.page_fixed(
                 id="runButton", label="Go", class_="btn-primary w-100"
             ),
         ),
-        ui.panel_main(ui.output_plot("viz_feature")),
+        ui.panel_main(
+            ui.h2(ui.output_text("plot_title")), ui.output_plot("viz_feature")
+        ),
     ),
 )
 
 
 def server(input, output, session):
     @output
+    @render.text
+    def plot_title():
+        return "Placeholder"
+
+    @output
     @render.plot
     @reactive.event(input.runButton)
     def viz_feature():
+        # return the required geodataframe
         search_pat = re.compile(f"{input.citySelector()}-{input.featureSelector()}.*")
         dat_pth = "data/"
         all_files = os.listdir(dat_pth)
@@ -69,7 +78,23 @@ def server(input, output, session):
         else:
             colour_col.set(input.featureSelector())
 
-        dat.plot(column=colour_col(), legend=True, figsize=(10, 6))
+        ax = dat.plot(
+            column=colour_col(),
+            legend=True,
+            figsize=(16, 16),
+            legend_kwds=dict(loc="upper left", ncol=1, bbox_to_anchor=(1, 1)),
+        )
+        # style
+        ax.set_facecolor("black")
+        ax.set(yticklabels=[])
+        ax.set(xticklabels=[])
+        plt.tick_params(axis="both", which="both", bottom=False, left=False)
+        # title
+        plot_text = reactive.Value(
+            f"{input.featureSelector()} Classification in {input.citySelector()}"
+        )
+        title_obj = plt.title(plot_text().title(), fontsize=24)
+        plt.setp(title_obj, color="white")
 
         # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
         # osm = pyrosm.OSM(fp)
