@@ -47,22 +47,14 @@ app_ui = ui.page_fixed(
             ),
         ),
         ui.panel_main(
-            ui.h2(ui.output_text("plot_title")), ui.output_plot("viz_feature")
+            ui.h2(ui.output_text("return_plt_txt")), ui.output_plot("viz_feature")
         ),
     ),
 )
 
 
 def server(input, output, session):
-    @output
-    @render.text
-    def plot_title():
-        return "Placeholder"
-
-    @output
-    @render.plot
-    @reactive.event(input.runButton)
-    def viz_feature():
+    def return_data():
         # return the required geodataframe
         search_pat = re.compile(f"{input.citySelector()}-{input.featureSelector()}.*")
         dat_pth = "data/"
@@ -70,18 +62,31 @@ def server(input, output, session):
         found = [
             os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
         ]
-        dat = gpd.read_feather(found[0])
+        return gpd.read_feather(found[0])
+
+    @output
+    @render.text
+    @reactive.event(input.runButton)
+    def return_plt_txt():
+        plot_text = reactive.Value(
+            f"{input.featureSelector()} Classification in {input.citySelector()}"
+        )
+        return plot_text().title()
+
+    @output
+    @render.plot
+    @reactive.event(input.runButton)
+    def viz_feature():
         # Selecting column to colour plot depends on selected feature
         colour_col = reactive.Value(None)
         if input.featureSelector() == "net-driving":
             colour_col.set(None)
         else:
             colour_col.set(input.featureSelector())
-
-        ax = dat.plot(
+        ax = return_data().plot(
             column=colour_col(),
             legend=True,
-            figsize=(16, 16),
+            figsize=(32, 32),
             legend_kwds=dict(loc="upper left", ncol=1, bbox_to_anchor=(1, 1)),
         )
         # style
@@ -89,12 +94,6 @@ def server(input, output, session):
         ax.set(yticklabels=[])
         ax.set(xticklabels=[])
         plt.tick_params(axis="both", which="both", bottom=False, left=False)
-        # title
-        plot_text = reactive.Value(
-            f"{input.featureSelector()} Classification in {input.citySelector()}"
-        )
-        title_obj = plt.title(plot_text().title(), fontsize=24)
-        plt.setp(title_obj, color="white")
 
         # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
         # osm = pyrosm.OSM(fp)
