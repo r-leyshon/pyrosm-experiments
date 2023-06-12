@@ -62,7 +62,14 @@ def server(input, output, session):
             os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
         ]
         dat = gpd.read_feather(found[0])
-        dat.plot()
+        # Selecting column to colour plot depends on selected feature
+        colour_col = reactive.Value(None)
+        if input.featureSelector() == "net-driving":
+            colour_col.set(None)
+        else:
+            colour_col.set(input.featureSelector())
+
+        dat.plot(column=colour_col(), legend=True, figsize=(10, 6))
 
         # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
         # osm = pyrosm.OSM(fp)
