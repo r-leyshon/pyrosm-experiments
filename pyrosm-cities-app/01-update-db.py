@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import toml
 from datetime import datetime
+import re
 
 import pyrosm
 from pyrosm.data import sources
@@ -71,6 +72,13 @@ for city, osm in osm_cities.items():
 
 # finally with green space
 n = 1
+rock_pat = re.compile(
+    r"rock|cliff|shingle|sand|stone|scree|gorge|ridge|landslide|mountain"
+)
+water_pat = re.compile(r"bay|beach|coast|spring|water|wet|shoal|river|flood|reed")
+green_pat = re.compile(
+    r"grass|mud|heath|tree|shrub|scrub|scub|wood|forest|field|earth|meadow|lawn|fell"
+)
 for city, osm in osm_cities.items():
     print(f"Extracting natural features {n} of {n_cities}")
     nat = osm.get_natural()
@@ -78,6 +86,22 @@ for city, osm in osm_cities.items():
     fname = os.path.join(out_pth, f"{slug}.arrow")
     # keep only features of interest
     nat = nat.loc[:, ["natural", "geometry"]]
+    # reclassify the natural columns
+    # reclassify
+    nat["reclassified_natural"] = nat.natural
+
+    nat.reclassified_natural = [
+        "rock" if bool(rock_pat.search(nat_class)) else nat_class
+        for nat_class in nat.reclassified_natural
+    ]
+    nat.reclassified_natural = [
+        "water" if bool(water_pat.search(nat_class)) else nat_class
+        for nat_class in nat.reclassified_natural
+    ]
+    nat.reclassified_natural = [
+        "green" if bool(green_pat.search(nat_class)) else nat_class
+        for nat_class in nat.reclassified_natural
+    ]
     print(f"Writing natural features to {fname}")
     nat.to_feather(fname)
     n += 1
