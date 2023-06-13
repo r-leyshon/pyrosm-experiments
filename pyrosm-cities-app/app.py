@@ -47,7 +47,8 @@ app_ui = ui.page_fixed(
             ),
         ),
         ui.panel_main(
-            ui.h2(ui.output_text("return_plt_txt")), ui.output_plot("viz_feature")
+            ui.h2(ui.output_text("return_plt_txt")),
+            ui.output_plot("viz_feature"),
         ),
     ),
 )
@@ -77,29 +78,32 @@ def server(input, output, session):
     @render.plot
     @reactive.event(input.runButton)
     def viz_feature():
-        # Selecting column to colour plot depends on selected feature
-        colour_col = reactive.Value(None)
-        if input.featureSelector() == "net-driving":
-            colour_col.set(None)
-        else:
-            colour_col.set(input.featureSelector())
-        ax = return_data().plot(
-            column=colour_col(),
-            legend=True,
-            figsize=(32, 32),
-            legend_kwds=dict(loc="upper left", ncol=1, bbox_to_anchor=(1, 1)),
-        )
-        # style
-        ax.set_facecolor("black")
-        ax.set(yticklabels=[])
-        ax.set(xticklabels=[])
-        plt.tick_params(axis="both", which="both", bottom=False, left=False)
+        with ui.Progress(min=1, max=100) as p:
+            p.set(message="Plotting in progress", detail="Sit tight...")
+            # Selecting column to colour plot depends on selected feature
+            colour_col = reactive.Value(None)
+            if input.featureSelector() == "net-driving":
+                colour_col.set(None)
+            else:
+                colour_col.set(input.featureSelector())
 
-        # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
-        # osm = pyrosm.OSM(fp)
-        # net = osm.get_network(network_type="driving")
-        # net_len = int(round(sum(net["length"]) / 1000, 0))
-        # return f"Estimated road length is {net_len:,} kilometers (nearest km)."
+            ax = return_data().plot(
+                column=colour_col(),
+                legend=True,
+                figsize=(16, 16),
+                legend_kwds=dict(loc="upper left", ncol=1, bbox_to_anchor=(1, 1)),
+            )
+            # style
+            ax.set_facecolor("black")
+            ax.set(yticklabels=[])
+            ax.set(xticklabels=[])
+            plt.tick_params(axis="both", which="both", bottom=False, left=False)
+
+            # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
+            # osm = pyrosm.OSM(fp)
+            # net = osm.get_network(network_type="driving")
+            # net_len = int(round(sum(net["length"]) / 1000, 0))
+            # return f"Estimated road length is {net_len:,} kilometers (nearest km)."
 
 
 app = App(app_ui, server)
