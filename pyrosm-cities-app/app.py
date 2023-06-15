@@ -87,7 +87,7 @@ def server(input, output, session):
             elif input.featureSelector() == "natural":
                 colour_col.set("reclassified_natural")
             else:
-                colour_col.set(input.featureSelector())
+                colour_col.set("reclassified_landuse")
 
             ax = return_data().plot(
                 column=colour_col(),
