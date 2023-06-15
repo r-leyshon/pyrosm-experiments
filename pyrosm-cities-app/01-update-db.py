@@ -8,6 +8,7 @@ import pyrosm
 from pyrosm.data import sources
 from pyprojroot import here
 from django.utils.text import slugify
+import numpy as np
 
 """This script is used to generate or overwrite a database of
 pyrosm-derived features for use with the pyrosm-cities-app. This is to
@@ -144,6 +145,8 @@ for city, osm in osm_cities.items():
     landuse = osm.get_landuse()
     slug = slugify(f"{city}-landuse-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
+    # filter out point data
+    landuse = landuse[np.array(landuse.geom_type != "Point", dtype=bool)]
     # keep only features of interest
     landuse = landuse.loc[:, ["landuse", "geometry"]]
     # reclassify
@@ -194,6 +197,8 @@ for city, osm in osm_cities.items():
     nat = osm.get_natural()
     slug = slugify(f"{city}-natural-{vint}")
     fname = os.path.join(out_pth, f"{slug}.arrow")
+    # filter out point data
+    nat = nat[np.array(nat.geom_type != "Point", dtype=bool)]
     # keep only features of interest
     nat = nat.loc[:, ["natural", "geometry"]]
     # reclassify the natural columns
