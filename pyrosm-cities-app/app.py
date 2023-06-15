@@ -79,11 +79,13 @@ def server(input, output, session):
     @reactive.event(input.runButton)
     def viz_feature():
         with ui.Progress(min=1, max=100) as p:
-            p.set(message="Plotting in progress", detail="Sit tight...")
+            p.set(message="Working", detail="Sit tight...")
             # Selecting column to colour plot depends on selected feature
             colour_col = reactive.Value(None)
             if input.featureSelector() == "net-driving":
                 colour_col.set(None)
+            elif input.featureSelector() == "natural":
+                colour_col.set("reclassified_natural")
             else:
                 colour_col.set(input.featureSelector())
 
