@@ -59,6 +59,86 @@ for city, osm in osm_cities.items():
 
 # extract land use features & write to disk
 n = 1
+transp = "|".join(["aero", "railway", "highway", "motorway", "road", "runway"]).lower()
+
+agri = "|".join(
+    [
+        "Allotments",
+        "Animal",
+        "Farm",
+        "Field",
+        "Flowerbed",
+        "Forest",
+        "Grass",
+        "Green",
+        "Horticulture",
+        "Meadow",
+        "Orchard",
+        "plant_nursery",
+        "Scrub",
+        "Shrubs",
+        "Vineyard",
+        "Apiary",
+        "Aquaculture",
+        "Arboretum",
+        "Growing",
+        "Pasture",
+    ]
+).lower()
+
+rec = "|".join(
+    [
+        "Contains recreation",
+        "Park",
+        "Leisure",
+        "Sport",
+        "Recreation",
+        "Tourism",
+        "Playing ",
+    ]
+)
+
+commerce = "|".join(
+    [
+        "Commercial",
+        "Depot",
+        "Retail",
+        "Storage",
+        "Warehouse",
+        "Hospitality",
+        "Logistics",
+    ]
+)
+
+indus = "|".join(["Industrial", "Factory", "Industr", "Quarry"])
+
+amen = "|".join(
+    [
+        "Landfill",
+        "Cemetery",
+        "Military",
+        "Parking",
+        "Religious",
+        "Health",
+        "car_park",
+        "Church",
+        "Education",
+        "Government",
+        "^hospital$",
+        "Sewage",
+    ]
+)
+
+develop = "|".join(["proposed_construction", "Construction", "proposed_station"])
+
+trans_pat = re.compile(transp, re.IGNORECASE)
+agri_pat = re.compile(agri, re.IGNORECASE)
+rec_pat = re.compile(rec, re.IGNORECASE)
+comm_pat = re.compile(commerce, re.IGNORECASE)
+indus_pat = re.compile(indus, re.IGNORECASE)
+amen_pat = re.compile(amen, re.IGNORECASE)
+dev_pat = re.compile(develop, re.IGNORECASE)
+
 for city, osm in osm_cities.items():
     print(f"Extracting landuse features {n} of {n_cities}")
     landuse = osm.get_landuse()
@@ -66,6 +146,36 @@ for city, osm in osm_cities.items():
     fname = os.path.join(out_pth, f"{slug}.arrow")
     # keep only features of interest
     landuse = landuse.loc[:, ["landuse", "geometry"]]
+    # reclassify
+    landuse["reclassified_landuse"] = landuse.landuse
+    landuse.reclassified_landuse = [
+        "transport" if bool(trans_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "agriculture" if bool(agri_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "recreation" if bool(rec_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "commerce" if bool(comm_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "industry" if bool(indus_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "amenities" if bool(amen_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
+    landuse.reclassified_landuse = [
+        "development" if bool(dev_pat.search(land_class)) else land_class
+        for land_class in landuse.reclassified_landuse
+    ]
     print(f"Writing landuse features to {fname}")
     landuse.to_feather(fname)
     n += 1
