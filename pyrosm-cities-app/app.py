@@ -5,6 +5,7 @@ import os
 from shiny import ui, render, App, reactive
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # set working directory to that expected by deployment
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -47,8 +48,10 @@ app_ui = ui.page_fixed(
             ),
         ),
         ui.panel_main(
+            # ui.output_text("debug_txt"),
             ui.h2(ui.output_text("return_plt_txt")),
             ui.output_plot("viz_feature"),
+            ui.output_table("summ_table"),
         ),
     ),
 )
@@ -106,11 +109,27 @@ def server(input, output, session):
             ax.set(xticklabels=[])
             plt.tick_params(axis="both", which="both", bottom=False, left=False)
 
-            # fp = pyrosm.get_data(input.citySelector())  # downloads to tmp
-            # osm = pyrosm.OSM(fp)
-            # net = osm.get_network(network_type="driving")
-            # net_len = int(round(sum(net["length"]) / 1000, 0))
-            # return f"Estimated road length is {net_len:,} kilometers (nearest km)."
+        @output
+        @render.table
+        @reactive.event(input.runButton)
+        def summ_table():
+            tab_dict = dict()
+            dat = return_data()[0]
+            if input.featureSelector() == "net-driving":
+                tab_dict["Total length (km)"] = [int(sum(dat["length"]) / 1000)]
+            else:
+                areas = dat.area
+                tab_dict[f"Total {input.featureSelector()} area (m2)"] = [
+                    sum(areas) / 1000000
+                ]
+            return pd.DataFrame.from_dict(tab_dict, orient="columns")
+
+        # @output
+        # @render.text
+        # def debug_txt():
+        #     dat = return_data()[0]
+        #     areas = dat.area
+        #     return sum(areas)
 
 
 app = App(app_ui, server)
