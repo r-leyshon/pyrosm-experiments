@@ -43,6 +43,12 @@ app_ui = ui.page_fixed(
                 choices=["net-driving", "landuse", "natural"],
                 selected="landuse",
             ),
+            ui.input_select(
+                id="crsSelector",
+                label="Project to CRS:",
+                choices=["wgs84", "27700", "2154"],
+                selected="wgs84",
+            ),
             ui.input_action_button(
                 id="runButton", label="Go", class_="btn-primary w-100"
             ),
@@ -58,6 +64,7 @@ app_ui = ui.page_fixed(
 
 
 def server(input, output, session):
+    @reactive.event(input.runButton)
     def return_data():
         # return the required geodataframe
         search_pat = re.compile(f"{input.citySelector()}-{input.featureSelector()}.*")
@@ -67,7 +74,9 @@ def server(input, output, session):
             os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
         ]
         pth = found[0]
-        return (gpd.read_feather(pth), pth)
+        dat = gpd.read_feather(pth)
+        dat = dat.to_crs(input.crsSelector())
+        return (dat, pth)
 
     @output
     @render.text
@@ -78,7 +87,7 @@ def server(input, output, session):
         vint = pat.search(return_data()[1]).group(0)
         plot_text = reactive.Value(
             f"{input.featureSelector()} in {input.citySelector()}".title()
-            + f"OSM: {vint}"
+            + f" OSM: {vint}"
         )
         return plot_text()
 
@@ -119,7 +128,7 @@ def server(input, output, session):
                 tab_dict["Total length (km)"] = [int(sum(dat["length"]) / 1000)]
             else:
                 areas = dat.area
-                tab_dict[f"Total {input.featureSelector()} area (m2)"] = [
+                tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
                     sum(areas) / 1000000
                 ]
             return pd.DataFrame.from_dict(tab_dict, orient="columns")
