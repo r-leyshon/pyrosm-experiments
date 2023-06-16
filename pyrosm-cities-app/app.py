@@ -63,16 +63,21 @@ def server(input, output, session):
         found = [
             os.path.join(dat_pth, fn) for fn in all_files if bool(search_pat.search(fn))
         ]
-        return gpd.read_feather(found[0])
+        pth = found[0]
+        return (gpd.read_feather(pth), pth)
 
     @output
     @render.text
     @reactive.event(input.runButton)
     def return_plt_txt():
+        # get the OSM ingest date:
+        pat = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+        vint = pat.search(return_data()[1]).group(0)
         plot_text = reactive.Value(
-            f"{input.featureSelector()} Classification in {input.citySelector()}"
+            f"{input.featureSelector()} in {input.citySelector()}".title()
+            + f"OSM: {vint}"
         )
-        return plot_text().title()
+        return plot_text()
 
     @output
     @render.plot
@@ -89,7 +94,7 @@ def server(input, output, session):
             else:
                 colour_col.set("reclassified_landuse")
 
-            ax = return_data().plot(
+            ax = return_data()[0].plot(
                 column=colour_col(),
                 legend=True,
                 figsize=(16, 16),
