@@ -142,5 +142,14 @@ def server(input, output, session):
             areas = dat.area
             return sum(areas)
 
+        @reactive.Effect
+        @reactive.event(input.runButton)
+        def _():
+            if input.crsSelector() == "wgs84":
+                ui.notification_show(
+                    "CRS is geographic. Results from 'area' are likely incorrect.",
+                    type="warning",
+                )
+
 
 app = App(app_ui, server)
