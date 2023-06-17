@@ -54,7 +54,7 @@ app_ui = ui.page_fixed(
             ),
         ),
         ui.panel_main(
-            ui.output_text("debug_txt"),
+            # ui.output_text("debug_txt"),
             ui.h2(ui.output_text("return_plt_txt")),
             ui.output_plot("viz_feature"),
             ui.output_table("summ_table"),
@@ -131,16 +131,16 @@ def server(input, output, session):
                 # marseilles has a nat feature that results in a negative area, remove
                 areas = [a for a in areas if a > 0]
                 tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
-                    sum(areas) / 1000000
+                    int(sum(areas) / 1000000)
                 ]
             return pd.DataFrame.from_dict(tab_dict, orient="columns")
 
-        @output
-        @render.text
-        def debug_txt():
-            dat = return_data()[0]
-            areas = dat.area
-            return sum(areas)
+        # @output
+        # @render.text
+        # def debug_txt():
+        #     dat = return_data()[0]
+        #     areas = dat.area
+        #     return int(sum(areas))
 
         @reactive.Effect
         @reactive.event(input.runButton)
