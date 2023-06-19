@@ -130,8 +130,8 @@ osm_cities = dict()
 for city in AOI:
     if city in cities:
         # logic to ingest city data from pyrosm
-        pass
         fp = pyrosm.get_data(city)
+        osm_cities[city] = pyrosm.OSM(fp)
     else:
         # logic to ingest region data with pyrosm, then use osmium to filter to bbox
         # get the OSM for the region
@@ -155,9 +155,7 @@ for city in AOI:
                 out_tmp,
             ]
         )
-
-    osm_cities[city] = pyrosm.OSM(fp)
-
+        osm_cities[city] = pyrosm.OSM(out_tmp)
 
 n_cities = len(osm_cities)
 n_nets = n_cities * len(MODES)
@@ -176,7 +174,7 @@ for city, osm in osm_cities.items():
             net = net.loc[:, ["geometry", "length", "maxspeed"]]
             print(f"Writing net to {fname}")
             net.to_feather(fname)
-        except DecodeError:
+        except (DecodeError, ValueError):
             print(f"OSM encoding problem encountered with {city}. Skipping.")
             probs.append(city)
             pass
