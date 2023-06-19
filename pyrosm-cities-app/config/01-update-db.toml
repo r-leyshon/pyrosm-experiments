@@ -1,8 +1,12 @@
 title = "Ingest config for pyrosm"
 
 [cities]
-aoi = ["london", "leeds", "marseille"]
+aoi = ["london", "leeds", "marseille", "newport", "lille"]
 
 [network]
 #modes = ["walking", "cycling", "driving", "driving+service"]
 modes = ["driving"]
+
+[osm]
+bbox = {newport = [-3.077081, 51.52222, -2.925075, 51.593596], lille = [2.95455,50.588135,3.164228,50.668101]}
+region = {newport = "wales", lille = "france"}
