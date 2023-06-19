@@ -1,5 +1,4 @@
 import re
-import toml
 import os
 
 from shiny import ui, render, App, reactive
@@ -10,9 +9,9 @@ import pandas as pd
 # set working directory to that expected by deployment
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 # get the available city values
-CONFIG = toml.load("config/01-update-db.toml")
-
-cities = CONFIG["cities"]["aoi"]
+found_fs = os.listdir("data/")
+cities = [f.split("-")[0] for f in found_fs]
+cities = list(set(cities))
 
 
 app_ui = ui.page_fixed(
