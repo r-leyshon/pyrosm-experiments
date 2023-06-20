@@ -90,23 +90,27 @@ def server(input, output, session):
         )
         return plot_text()
 
+    @reactive.event(input.runButton)
+    def selected_feature():
+        # Selecting column to colour plot depends on selected feature
+        colour_col = reactive.Value(None)
+        if input.featureSelector() == "net-driving":
+            colour_col.set(None)
+        elif input.featureSelector() == "natural":
+            colour_col.set("reclassified_natural")
+        else:
+            colour_col.set("reclassified_landuse")
+        return colour_col()
+
     @output
     @render.plot
     @reactive.event(input.runButton)
     def viz_feature():
         with ui.Progress(min=1, max=100) as p:
             p.set(message="Working", detail="Sit tight...")
-            # Selecting column to colour plot depends on selected feature
-            colour_col = reactive.Value(None)
-            if input.featureSelector() == "net-driving":
-                colour_col.set(None)
-            elif input.featureSelector() == "natural":
-                colour_col.set("reclassified_natural")
-            else:
-                colour_col.set("reclassified_landuse")
 
             ax = return_data()[0].plot(
-                column=colour_col(),
+                column=selected_feature(),
                 legend=True,
                 figsize=(16, 16),
                 legend_kwds=dict(loc="upper left", ncol=1, bbox_to_anchor=(1, 1)),
@@ -117,38 +121,38 @@ def server(input, output, session):
             ax.set(xticklabels=[])
             plt.tick_params(axis="both", which="both", bottom=False, left=False)
 
-        @output
-        @render.table
-        @reactive.event(input.runButton)
-        def summ_table():
-            tab_dict = dict()
-            dat = return_data()[0]
-            if input.featureSelector() == "net-driving":
-                tab_dict["Total length (km)"] = [int(sum(dat["length"]) / 1000)]
-            else:
-                areas = dat.area
-                # marseilles has a nat feature that results in a negative area, remove
-                areas = [a for a in areas if a > 0]
-                tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
-                    int(sum(areas) / 1000000)
-                ]
-            return pd.DataFrame.from_dict(tab_dict, orient="columns")
+    @output
+    @render.table
+    @reactive.event(input.runButton)
+    def summ_table():
+        tab_dict = dict()
+        dat = return_data()[0]
+        if input.featureSelector() == "net-driving":
+            tab_dict["Total length (km)"] = [int(sum(dat["length"]) / 1000)]
+        else:
+            dat["area_m"] = dat.area
+            # marseilles has a nat feature that results in a negative area, remove
+            dat = dat[dat["area_m"] > 0]
+            # dat.groupby("landuse").sum("area")
+            tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
+                int(sum(dat["area_m"]) / 1000000)
+            ]
+        return pd.DataFrame.from_dict(tab_dict, orient="columns")
 
-        # @output
-        # @render.text
-        # def debug_txt():
-        #     dat = return_data()[0]
-        #     areas = dat.area
-        #     return int(sum(areas))
+    # @output
+    # @render.text
+    # def debug_txt():
+    # # Use this to debug values.
+    #     return selected_feature()
 
-        @reactive.Effect
-        @reactive.event(input.runButton)
-        def _():
-            if input.crsSelector() == "wgs84":
-                ui.notification_show(
-                    "CRS is geographic. Results from 'area' are likely incorrect.",
-                    type="warning",
-                )
+    @reactive.Effect
+    @reactive.event(input.runButton)
+    def _():
+        if input.crsSelector() == "wgs84":
+            ui.notification_show(
+                "CRS is geographic. Results from 'area' are likely incorrect.",
+                type="warning",
+            )
 
 
 app = App(app_ui, server)
