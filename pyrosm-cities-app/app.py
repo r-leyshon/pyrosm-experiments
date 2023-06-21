@@ -129,21 +129,31 @@ def server(input, output, session):
         dat = return_data()[0]
         if input.featureSelector() == "net-driving":
             tab_dict["Total length (km)"] = [int(sum(dat["length"]) / 1000)]
+            return pd.DataFrame.from_dict(tab_dict, orient="columns")
         else:
-            dat["area_m"] = dat.area
+            dat["area_km"] = dat.area / 1000000
             # marseilles has a nat feature that results in a negative area, remove
-            dat = dat[dat["area_m"] > 0]
-            # dat.groupby("landuse").sum("area")
+            dat = dat[dat["area_km"] > 0]
             tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
-                int(sum(dat["area_m"]) / 1000000)
+                int(sum(dat["area_km"]))
             ]
-        return pd.DataFrame.from_dict(tab_dict, orient="columns")
+            summ_tab = (
+                dat.groupby(selected_feature())
+                .sum("area_km")
+                .round(3)
+                .sort_values(by="area_km", ascending=False)
+                .reset_index()
+            )
+            return summ_tab
 
     # @output
     # @render.text
     # def debug_txt():
-    # # Use this to debug values.
-    #     return selected_feature()
+    #     # Use this to debug values.
+    #     dat = return_data()[0]
+    #     dat_summ = dat.groupby(input.featureSelector()).count()
+
+    #     return dat_summ
 
     @reactive.Effect
     @reactive.event(input.runButton)
