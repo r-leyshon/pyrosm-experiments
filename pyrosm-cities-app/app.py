@@ -134,9 +134,7 @@ def server(input, output, session):
             dat["area_km"] = dat.area / 1000000
             # marseilles has a nat feature that results in a negative area, remove
             dat = dat[dat["area_km"] > 0]
-            tab_dict[f"Total {input.featureSelector()} area (km2)"] = [
-                int(sum(dat["area_km"]))
-            ]
+            tot_area = sum(dat["area_km"])
             summ_tab = (
                 dat.groupby(selected_feature())
                 .sum("area_km")
@@ -144,6 +142,7 @@ def server(input, output, session):
                 .sort_values(by="area_km", ascending=False)
                 .reset_index()
             )
+            summ_tab["perc_total"] = round(summ_tab["area_km"] / tot_area * 100, 3)
             return summ_tab
 
     # @output
