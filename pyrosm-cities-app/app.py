@@ -57,7 +57,7 @@ app_ui = ui.page_fixed(
             ui.h2(ui.output_text("return_plt_txt")),
             ui.output_plot("viz_feature"),
             ui.output_table("summ_table"),
-            ui.input_action_button(id="show_mod", label="Classification Notes"),
+            ui.input_action_button(id="show_mod", label="Notes"),
         ),
     ),
 )
@@ -167,13 +167,26 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.show_mod)
     def _():
-        if input.featureSelector() == "net_driving":
-            t_txt = "Foo"
+        t_txt = reactive.Value("")
+        p_txt = reactive.Value("")
+        if input.featureSelector() == "net-driving":
+            t_txt.set("OSM Driving Network")
+            p_txt.set(
+                "This transport mode includes private car but not public"
+                " service vehicles."
+                " Click outside of this window to return to the app."
+            )
         else:
-            t_txt = "Bar"
+            t_txt.set("OSM Landuse / Natural Features")
+            p_txt.set(
+                "Accurate area calculation requires an appropriate CRS to be"
+                " selected. Categories have been grouped to improve plotting."
+                " Click outside of this window to return to the app."
+            )
+
         m = ui.modal(
-            "This is a somewhat important message.",
-            title=t_txt,
+            p_txt(),
+            title=t_txt(),
             easy_close=True,
             footer=None,
         )
