@@ -57,6 +57,7 @@ app_ui = ui.page_fixed(
             ui.h2(ui.output_text("return_plt_txt")),
             ui.output_plot("viz_feature"),
             ui.output_table("summ_table"),
+            ui.input_action_button(id="show_mod", label="Classification Notes"),
         ),
     ),
 )
@@ -162,6 +163,21 @@ def server(input, output, session):
                 "CRS is geographic. Results from 'area' are likely incorrect.",
                 type="warning",
             )
+
+    @reactive.Effect
+    @reactive.event(input.show_mod)
+    def _():
+        if input.featureSelector() == "net_driving":
+            t_txt = "Foo"
+        else:
+            t_txt = "Bar"
+        m = ui.modal(
+            "This is a somewhat important message.",
+            title=t_txt,
+            easy_close=True,
+            footer=None,
+        )
+        ui.modal_show(m)
 
 
 app = App(app_ui, server)
