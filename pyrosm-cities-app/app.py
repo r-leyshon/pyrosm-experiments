@@ -5,6 +5,7 @@ from shiny import ui, render, App, reactive
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import shinyswatch
 
 # set working directory to that expected by deployment
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -15,7 +16,8 @@ cities = list(set(cities))
 
 
 app_ui = ui.page_fixed(
-    ui.tags.header(ui.tags.html(lang="en"), ui.tags.title("Some Title")),
+    ui.tags.header(ui.tags.html(lang="en"), ui.tags.title("Pyrosm Cities App")),
+    shinyswatch.theme.sketchy(),
     ui.h1("City Road Network"),
     ui.markdown(
         """
@@ -53,7 +55,7 @@ app_ui = ui.page_fixed(
             ),
         ),
         ui.panel_main(
-            # ui.output_text("debug_txt"),
+            ui.output_text("debug_txt"),
             ui.h2(ui.output_text("return_plt_txt")),
             ui.output_plot("viz_feature"),
             ui.output_table("summ_table"),
@@ -80,12 +82,12 @@ def server(input, output, session):
 
     @output
     @render.text
-    @reactive.event(input.runButton)
     def return_plt_txt():
         # get the OSM ingest date:
         pat = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
         vint = pat.search(return_data()[1]).group(0)
-        plot_text = reactive.Value(
+        plot_text = reactive.Value("Make a Selection & Click Go")
+        plot_text.set(
             f"{input.featureSelector()} in {input.citySelector()}".title()
             + f" OSM: {vint}"
         )
@@ -145,15 +147,6 @@ def server(input, output, session):
             )
             summ_tab["perc_total"] = round(summ_tab["area_km"] / tot_area * 100, 3)
             return summ_tab
-
-    # @output
-    # @render.text
-    # def debug_txt():
-    #     # Use this to debug values.
-    #     dat = return_data()[0]
-    #     dat_summ = dat.groupby(input.featureSelector()).count()
-
-    #     return dat_summ
 
     @reactive.Effect
     @reactive.event(input.runButton)
